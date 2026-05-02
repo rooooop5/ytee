@@ -1,9 +1,9 @@
 [project]
-name = "yt-cli"
+name = "ytee"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.9"
 dependencies = [
     "google-api-python-client>=2.195.0",
     "google-auth-oauthlib>=1.3.1",
