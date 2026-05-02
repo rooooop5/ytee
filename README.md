@@ -28,7 +28,7 @@ Before using `ytee`, you need a Google Cloud project with the YouTube Data API v
 ### 2. Install ytee
 
 ```bash
-pip install ytee .
+pip install ytee 
 ```
 
 ---
