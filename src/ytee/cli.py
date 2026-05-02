@@ -4,8 +4,8 @@ import os
 import typer
 from typing import Annotated
 
-from yt_cli.auth import get_credentials, set_credentials, init_secrets
-from yt_cli.upload import upload_to_youtube, build_upload_queue
+from ytee.auth import get_credentials, set_credentials, init_secrets
+from ytee.upload import upload_to_youtube, build_upload_queue
 
 
 app = typer.Typer(no_args_is_help=True)
