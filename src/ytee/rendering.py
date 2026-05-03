@@ -1,36 +1,69 @@
-from rich.progress import Progress,TextColumn,BarColumn
-from rich.layout import Layout
-from rich.live import Live
+from rich.progress import (
+    Progress,
+    BarColumn,
+    SpinnerColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+    TotalFileSizeColumn,
+    FileSizeColumn,
+    DownloadColumn,
+)
+import os
 from rich.table import Table
 from rich.console import Console
-from rich.panel import Panel
-import time
-queue=["hi",'bue','me']
 
-progress = Progress(
-    TextColumn("{task.description}"),
-    BarColumn(),
-    TextColumn("{task.percentage:>3.0f}%"),
-)
-tasks={}
 
-def add_tasks(queue):
-    for video in queue:
-        tasks[video]=progress.add_task(description=video,total=100)
+console = Console()
+spinner_column = SpinnerColumn()
+bar_column = BarColumn()
+total_file_size_column = TotalFileSizeColumn()
+file_size_column = FileSizeColumn()
+time_remaining_column = TimeRemainingColumn()
+time_elapsed_column = TimeElapsedColumn()
+download_column = DownloadColumn()
 
-def make_rich_table(queue):
-    table=Table(title='Upload Queue')
-    table.add_column('Video')
-    table.add_column('Progress')
-    for video in queue:
-        bar=BarColumn()
-        task_id=tasks[video]
-        task=progress.tasks[task_id]
-        table.add_row(video,bar.render(task))
+
+def get_progress() -> Progress:
+    progress = Progress(
+        spinner_column,
+        bar_column,
+        file_size_column,
+        total_file_size_column,
+        time_elapsed_column,
+        time_remaining_column,
+        download_column,
+        console=console,
+        disable=True,
+    )
+    return progress
+
+
+def build_tasks_dict(queue, progress) -> dict:
+    tasks_dict = {}
+    for ele in queue:
+        task_id = progress.add_task(ele, start=False, total=os.path.getsize(ele["path"]))
+        tasks_dict[ele["path"]] = task_id
+    return tasks_dict
+
+
+def render_table(task_dict, progress) -> Table:
+    table = Table(title="Task")
+    table.add_column("Video", justify="center")
+    table.add_column("Progress Bar", justify="center")
+    table.add_column("Size Uploaded", justify="center")
+    table.add_column("Total File Size", justify="center")
+    table.add_column("Time Elapsed", justify="center")
+    table.add_column("Time Remaining", justify="center")
+    table.add_column("Uploaded", justify="center")
+    for task_name, task_id in task_dict.items():
+        task = progress.tasks[task_id]
+        table.add_row(
+            task_name,
+            bar_column.render(task),
+            file_size_column.render(task),
+            total_file_size_column.render(task),
+            time_elapsed_column.render(task),
+            time_remaining_column.render(task),
+            download_column.render(task),
+        )
     return table
-
-add_tasks(queue)
-table=make_rich_table(queue)
-
-console=Console()
-console.print(table)

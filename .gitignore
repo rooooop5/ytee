@@ -11,3 +11,4 @@ wheels/
 /videos
 /secrets
 *.txt
+main.py
