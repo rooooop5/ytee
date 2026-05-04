@@ -5,18 +5,29 @@ from ytee.rendering import get_progress, build_tasks_dict
 
 import json
 import time
+from pprint import pprint
 from rich.live import Live
 from pathlib import Path
 
 
 def save(video: dict, file_path: str, video_id: str):
-    uploaded_file_path = get_uploads_dir().joinpath("/uploaded.txt")
-    if uploaded_file_path.is_dir():
-        with open(uploaded_file_path, "a+") as f:
-            f.write(f"{json.dumps({'path': Path(file_path).joinpath(video['name']), 'id': video_id})}" + "\n")
-    else:
-        with open(uploaded_file_path, "a+") as f:
-            f.write(f"{json.dumps({'path': file_path, 'id': video_id})}" + "\n")
+    file_path_obj = Path(file_path)
+    uploads_dir = get_uploads_dir()
+    uploads_dir.mkdir(exist_ok=True)
+    uploads_file_path = get_uploads_dir().joinpath("uploaded.json")
+    try:
+        with open(uploads_file_path, "r") as f:
+            uploaded_list = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        uploaded_list = []
+    with open(uploads_file_path, "a+") as f:
+        if file_path_obj.is_dir():
+            obj = {"path": str(Path(file_path).joinpath(video["name"])), "id": video_id}
+            uploaded_list.append(obj)
+        else:
+            obj = {"path": file_path, "id": video_id}
+            uploaded_list.append(obj)
+        json.dump(uploaded_list, f, indent=2)
 
 
 def migrate_pipeline():
@@ -53,7 +64,6 @@ def upload_pipeline(file_path: str, yt_video_name: str, yt_description: str, pri
         with Live() as live:
             for video in queue:
                 video_task = tasks_dict.get(video["path"])
-                print(video["name"])
                 video_id = upload_to_youtube(
                     creds,
                     video["path"],
@@ -73,9 +83,10 @@ def upload_pipeline(file_path: str, yt_video_name: str, yt_description: str, pri
 
 
 def show_uploads_pipeline():
-    uploaded_file_path = get_uploads_dir().joinpath("/uploaded.txt")
+    uploaded_file_path = get_uploads_dir().joinpath("uploaded.json")
     if not uploaded_file_path.exists():
         print("No uploads have been done yet.")
         return
     with open(uploaded_file_path, "r") as f:
-        print(f.read())
+        uploaded_list = json.load(f)
+        pprint(uploaded_list)

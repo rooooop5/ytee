@@ -1,4 +1,4 @@
-from ytee.paths import get_ytee_dir, get_secrets_dir,get_deprecated_secrets_dir
+from ytee.paths import get_ytee_dir, get_secrets_dir, get_deprecated_secrets_dir
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -11,11 +11,9 @@ SCOPES = ["https://www.googleapis.com/auth/youtube"]
 
 def init_secrets(client_secret_path: str = None, token_path: str = None):
     ytee_path_obj = get_ytee_dir()
-    if not ytee_path_obj.exists():
-        ytee_path_obj.mkdir()
+    ytee_path_obj.mkdir(exist_ok=True)
     secrets_path = get_secrets_dir()
-    if not secrets_path.exists():
-        secrets_path.mkdir()
+    secrets_path.mkdir(exist_ok=True)
     client_secret_destination = secrets_path.joinpath("client_secret.json")
     if not client_secret_destination.exists():
         if not client_secret_path:
@@ -53,8 +51,9 @@ def set_credentials() -> bool:
 
 def verify_credentials() -> bool:
     secrets_path = get_secrets_dir()
+    client_secret_path = get_secrets_dir().joinpath("client_secret.json")
     token_path = secrets_path.joinpath("token.json")
-    if token_path.exists():
+    if token_path.exists() and client_secret_path.exists():
         return True
     else:
         return False
@@ -68,22 +67,23 @@ def get_credentials() -> Credentials:
     else:
         return None
 
+
 def migrate_secrets():
-    deprecated_client_secret_path=get_deprecated_secrets_dir().joinpath('client_secret.json')
-    deprecated_token_path=get_deprecated_secrets_dir().joinpath('token.json')
-    secrets_path=get_secrets_dir()
-    new_client_secret_path=secrets_path.joinpath('client_secret.json')
-    new_token_path=secrets_path.joinpath('token.json')
+    deprecated_client_secret_path = get_deprecated_secrets_dir().joinpath("client_secret.json")
+    deprecated_token_path = get_deprecated_secrets_dir().joinpath("token.json")
+    secrets_path = get_secrets_dir()
+    new_client_secret_path = secrets_path.joinpath("client_secret.json")
+    new_token_path = secrets_path.joinpath("token.json")
     if new_client_secret_path.exists() and new_token_path.exists():
-        print('ytee is already setup, no need for migration.')
+        print("ytee is already set up, no need for migration.")
         return
     if not deprecated_client_secret_path.exists():
-        print('Client secret file not found in ~/.secrets.')
-        print('Failed to migrate.')
+        print("Client secret file not found in ~/.secrets.")
+        print("Failed to migrate.")
         return
     if not deprecated_token_path.exists():
-        print('Token file not found at ~/.secrets.')
-        print('Failed to migrate.')
+        print("Token file not found at ~/.secrets.")
+        print("Failed to migrate.")
         return
     deprecated_client_secret_path.rename(new_client_secret_path)
     deprecated_token_path.rename(new_token_path)

@@ -1,10 +1,26 @@
 <p align="center">
-<img src="assets/ytee_logo.png" alt="ytee logo" width="600"/>
+  <img src="assets/ytee_logo.png" alt="ytee logo" width="600"/>
 </p>
 
 # ytee
 
-A minimal CLI tool for uploading videos to YouTube — single files or entire directories — powered by the YouTube Data API v3.
+A minimal CLI for uploading videos to YouTube — single files or entire directories — powered by the YouTube Data API v3.
+
+---
+
+<div align="center">
+
+## ⛔ DO NOT USE v0.1.2 ⛔
+
+**v0.1.2 is broken and should not be used.**
+There is a known bug in the upload history logging that corrupts `uploaded.json` after the first upload.
+
+**Please stay on v0.1.1 or upgrade to v0.1.3:**
+```bash
+pip install --upgrade ytee
+```
+
+</div>
 
 ---
 
@@ -39,18 +55,6 @@ Before using `ytee`, you need a Google Cloud project with the YouTube Data API v
 3. Create **OAuth 2.0 credentials** for a Desktop application.
 4. Download the credentials as a JSON file (e.g. `client_secret.json`).
 
-### Migration from v0.1.0
-
-If you used `ytee` version `v0.1.0`, your credentials were stored under `~/.secrets/`. In newer versions, `ytee` now stores credentials in `~/.ytee/.google_secrets/`.
-
-Run the migration command once before using `ytee` :
-
-```bash
-ytee migrate
-```
-
-This moves `client_secret.json` and `token.json` from `~/.secrets/` into the current `ytee` secrets directory.
-
 ---
 
 ## CLI Commands
@@ -65,10 +69,24 @@ ytee init --secret-path /path/to/client_secret.json
 
 | Option | Short | Description |
 |---|---|---|
-| `--secret-path` | `-sp` | Path to your `client_secret.json` (required on first run) |
-| `--token-path` | `-tp` | Path to an existing `token.json` (optional) |
+| `--secret-path` | `-s` | Path to your `client_secret.json` downloaded from Google Cloud Console |
+| `--token-path` | `-t` | Path to an existing `token.json` (optional — skip if you don't have one yet) |
 
 > ⚠️ This must be run at least once before any other command will work.
+
+---
+
+### `ytee migrate` — Migrate from v0.1.0
+
+If you used `ytee` version `v0.1.0`, your credentials were stored under `~/.secrets/`. Newer versions store them in `~/.ytee/.google_secrets/`.
+
+Run this once to move your existing credentials to the new location:
+
+```bash
+ytee migrate
+```
+
+Only needed if you previously ran `ytee init` on v0.1.0.
 
 ---
 
@@ -80,13 +98,13 @@ Opens a browser window for Google OAuth authorization and saves the access token
 ytee set-creds
 ```
 
-Run this after `init`. If your credentials are still valid, they are reused automatically.
+Run this after `init`. If your credentials are still valid, they are reused automatically — you don't need to re-run this every time.
 
 ---
 
 ### `ytee verify-creds` — Check credential status
 
-Checks whether both `client_secret.json` and `token.json` are present.
+Checks whether `client_secret.json` and `token.json` are present in `~/.ytee/.google_secrets/`.
 
 ```bash
 ytee verify-creds
@@ -112,15 +130,12 @@ When a directory path is given, `ytee` automatically detects it and uploads ever
 
 | Option | Short | Description |
 |---|---|---|
-| `--path` | `-p` | Path to a video file or directory |
-| `--name` | `-n` | YouTube video title (used as a prefix for directory uploads) |
-| `--desc` | `-d` | YouTube video description |
+| `--path` | `-p` | Path to a video file or a directory of videos |
+| `--name` / `--prefix` | `-n` | YouTube video title (used as a prefix for directory uploads) |
+| `--desc` | `-d` | YouTube video description applied to all uploaded videos |
+| `--privacy` | — | Privacy setting: `unlisted` (default), `public`, or `private` |
 
-After each successful upload, `ytee` appends a log entry to `~/.ytee/.uploads/uploaded.txt`:
-
-```json
-{"path": "videos/part1.mp4", "id": "abc123XYZ"}
-```
+After each successful upload, `ytee` saves a log entry to `~/.ytee/.uploads/uploaded.json`.
 
 Uploads show a live progress table displaying upload speed, file size, time elapsed, and time remaining.
 
@@ -132,7 +147,7 @@ Uploads show a live progress table displaying upload speed, file size, time elap
 ytee show-uploads
 ```
 
-Prints the full contents of the upload log at `~/.ytee/.uploads/uploaded.txt`.
+Prints the contents of `~/.ytee/.uploads/uploaded.json`, showing the file path and YouTube video ID of every past upload.
 
 ---
 
@@ -153,17 +168,20 @@ ytee upload --path ~/videos/intro.mp4 --name "Introduction" --desc "Welcome to m
 
 # Step 4b — or upload a whole folder
 ytee upload --path ~/videos --name "Lecture - " --desc "Course upload"
+
+# Step 5 — view upload history
+ytee show-uploads
 ```
 
 ---
 
 ## Notes
 
-- Videos are uploaded as **unlisted** by default.
+- Videos are uploaded as **unlisted** by default. Use `--privacy public` or `--privacy private` to change this.
 - Credentials are stored in `~/.ytee/.google_secrets/` (`client_secret.json` and `token.json`).
-- Upload history is stored in `~/.ytee/.uploads/uploaded.txt`.
+- Upload history is stored in `~/.ytee/.uploads/uploaded.json`.
 - Directory uploads process files sequentially with a short delay between each upload.
-- Batch uploads include all files in the directory regardless of file extension.
+- Batch uploads include all files in the directory regardless of file extension — make sure your folder contains only video files.
 - On HTTP 5xx errors, `ytee` will retry the upload up to 3 times with a 5-second delay.
 
 ---
