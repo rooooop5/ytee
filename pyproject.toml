@@ -1,7 +1,7 @@
 [project]
 name = "ytee"
-version = "0.1.1"
-description = "Add your description here"
+version = "0.1.2"
+description = "A minimal CLI for uploading videos to YouTube — single files or entire directories, powered by the YouTube Data API v3."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [

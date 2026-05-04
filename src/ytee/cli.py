@@ -4,6 +4,7 @@ from ytee.pipelines import (
     set_creds_pipeline,
     show_uploads_pipeline,
     verify_creds_pipeline,
+    migrate_pipeline,
 )
 
 import typer
@@ -14,10 +15,15 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.command()
 def init(
-    client_secret_path: Annotated[str, typer.Option("--secret-path", "-sp")] = None,
-    token_path: Annotated[str, typer.Option("--token-path", "-tp")] = None,
+    client_secret_path: Annotated[str, typer.Option("--secret-path", "-s")] = None,
+    token_path: Annotated[str, typer.Option("--token-path", "-t")] = None,
 ):
     init_pipeline(client_secret_path, token_path)
+
+
+@app.command()
+def migrate():
+    migrate_pipeline()
 
 
 @app.command()
@@ -35,8 +41,9 @@ def upload(
     file_path: Annotated[str, typer.Option("--path", "-p")],
     yt_video_name: Annotated[str, typer.Option("--name", "-n")],
     yt_description: Annotated[str, typer.Option("--desc", "-d")],
+    privacy: Annotated[str, typer.Option("--privacy")] = "unlisted",
 ):
-    upload_pipeline(file_path, yt_video_name, yt_description)
+    upload_pipeline(file_path, yt_video_name, yt_description, privacy)
 
 
 @app.command()

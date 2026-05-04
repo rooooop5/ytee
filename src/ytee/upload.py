@@ -13,7 +13,7 @@ def build_upload_queue(file_path: str, yt_video_name: str) -> list[dict]:
     file_path_obj = Path(file_path)
     if file_path_obj.is_dir():
         return [
-            {"path": str(file_path_obj.joinpath(video)), "name": f"{yt_video_name}{os.path.splitext(video)[0]}"}
+            {"path": str(file_path_obj.joinpath(video)), "name": yt_video_name+Path(video).stem}
             for video in [file for file in file_path_obj.iterdir() if file.is_file()]
         ]
     else:
@@ -21,7 +21,7 @@ def build_upload_queue(file_path: str, yt_video_name: str) -> list[dict]:
 
 
 def upload_to_youtube(
-    creds, file_path, yt_video_name, yt_video_description, task_dict, current_task_id, progress: Progress, live
+    creds, file_path, yt_video_name, yt_video_description,privacy_setting, task_dict, current_task_id, progress: Progress, live
 ) -> str:
     total = os.path.getsize(file_path)
     progress.start_task(current_task_id)
@@ -30,7 +30,7 @@ def upload_to_youtube(
         part="snippet,status",
         body={
             "snippet": {"title": yt_video_name, "description": yt_video_description},
-            "status": {"privacyStatus": "unlisted"},
+            "status": {"privacyStatus": privacy_setting},
         },
         media_body=MediaFileUpload(file_path, chunksize=1024 * 1024, resumable=True),
     )
