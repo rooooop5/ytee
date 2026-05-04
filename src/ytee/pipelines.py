@@ -20,7 +20,7 @@ def save(video: dict, file_path: str, video_id: str):
             uploaded_list = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         uploaded_list = []
-    with open(uploads_file_path, "a+") as f:
+    with open(uploads_file_path, "w+") as f:
         if file_path_obj.is_dir():
             obj = {"path": str(Path(file_path).joinpath(video["name"])), "id": video_id}
             uploaded_list.append(obj)

@@ -10,12 +10,12 @@ A minimal CLI for uploading videos to YouTube — single files or entire directo
 
 <div align="center">
 
-## ⛔ DO NOT USE v0.1.2 ⛔
+## ⛔ PLEASE USE LATETS VERSION v0.1.4 ⛔
 
-**v0.1.2 is broken and should not be used.**
+**Previous versions less than v0.1.4 should not be used.**
 There is a known bug in the upload history logging that corrupts `uploaded.json` after the first upload.
 
-**Please stay on v0.1.1 or upgrade to v0.1.3:**
+**Please upgrade to v0.1.4:**
 ```bash
 pip install --upgrade ytee
 ```
