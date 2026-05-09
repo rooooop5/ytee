@@ -1,4 +1,4 @@
-from ytee.models import YoutubeUploadConfig, UploadLog, DisplayManager, TasksRegistry
+from ytee.models import YoutubeUploadConfig, UploadLog, DisplayManager, TasksRegistry, RenderingColumns
 from ytee.paths import get_uploads_dir
 from ytee.auth import get_credentials, init_secrets, set_credentials, verify_credentials, migrate_secrets
 from ytee.upload import build_upload_queue, upload_to_youtube
@@ -56,10 +56,11 @@ def upload_pipeline(file_path: str, yt_video_name: str, yt_description: str, pri
         return
 
     queue = build_upload_queue(file_path, yt_video_name)
-    with get_progress() as progress:
+    columns = RenderingColumns()
+    with get_progress(columns) as progress:
         tasks_registry = TasksRegistry(queue=queue, progress=progress)
         with Live() as live:
-            display_manager = DisplayManager(live=live, renderer=render_table, registry=tasks_registry)
+            display_manager = DisplayManager(live=live, renderer=render_table, registry=tasks_registry, columns=columns)
             for video in queue:
                 task = tasks_registry.get(video.path)
                 tasks_registry.start_task(task)

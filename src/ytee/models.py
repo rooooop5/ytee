@@ -1,8 +1,18 @@
 from enum import Enum
 from rich.live import Live
-from rich.progress import Progress, TaskID
+from rich.progress import (
+    Progress,
+    TaskID,
+    BarColumn,
+    SpinnerColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+    TotalFileSizeColumn,
+    FileSizeColumn,
+    DownloadColumn,
+)
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class PrivacySetting(str, Enum):
@@ -38,6 +48,17 @@ class TaskInfo:
     total: int
 
 
+@dataclass
+class RenderingColumns:
+    spinner_column: SpinnerColumn = field(default_factory=SpinnerColumn)
+    bar_column: BarColumn = field(default_factory=BarColumn)
+    total_file_size_column: TotalFileSizeColumn = field(default_factory=TotalFileSizeColumn)
+    file_size_column: FileSizeColumn = field(default_factory=FileSizeColumn)
+    time_remaining_column: TimeRemainingColumn = field(default_factory=TimeRemainingColumn)
+    time_elapsed_column: TimeElapsedColumn = field(default_factory=TimeElapsedColumn)
+    download_column: DownloadColumn = field(default_factory=DownloadColumn)
+
+
 class TasksRegistry:
     def __init__(self, queue: list[FileInfo], progress: Progress):
         self.progress = progress
@@ -62,11 +83,12 @@ class TasksRegistry:
 
 
 class DisplayManager:
-    def __init__(self, live: Live, renderer: callable, registry: TasksRegistry):
+    def __init__(self, live: Live, renderer: callable, registry: TasksRegistry, columns: RenderingColumns):
         self.live = live
         self.renderer = renderer
         self.registry = registry
+        self.columns = columns
 
     def refresh(self):
-        self.live.update(self.renderer(self.registry.tasks, self.registry.progress))
+        self.live.update(self.renderer(self.registry.tasks, self.registry.progress, self.columns))
         self.live.refresh()

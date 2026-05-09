@@ -24,7 +24,7 @@ def init_secrets(client_secret_path: str = None, token_path: str = None):
         client_secret_path_obj.rename(client_secret_destination)
     if token_path:
         token_path_obj = Path(token_path)
-        token_destination = secrets_path.joinpath("/token.json")
+        token_destination = secrets_path.joinpath("token.json")
         token_path_obj.rename(token_destination)
     print("Initialised ytee.")
 

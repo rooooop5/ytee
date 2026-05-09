@@ -1,45 +1,28 @@
-from ytee.models import TaskInfo
+from ytee.models import TaskInfo, RenderingColumns
 
-from rich.progress import (
-    Progress,
-    BarColumn,
-    SpinnerColumn,
-    TimeElapsedColumn,
-    TimeRemainingColumn,
-    TotalFileSizeColumn,
-    FileSizeColumn,
-    DownloadColumn,
-)
+from rich.progress import Progress
 from rich.table import Table
 from rich.console import Console
 
-
 console = Console()
-spinner_column = SpinnerColumn()
-bar_column = BarColumn()
-total_file_size_column = TotalFileSizeColumn()
-file_size_column = FileSizeColumn()
-time_remaining_column = TimeRemainingColumn()
-time_elapsed_column = TimeElapsedColumn()
-download_column = DownloadColumn()
 
 
-def get_progress() -> Progress:
+def get_progress(columns: RenderingColumns) -> Progress:
     progress = Progress(
-        spinner_column,
-        bar_column,
-        file_size_column,
-        total_file_size_column,
-        time_elapsed_column,
-        time_remaining_column,
-        download_column,
+        columns.spinner_column,
+        columns.bar_column,
+        columns.file_size_column,
+        columns.total_file_size_column,
+        columns.time_elapsed_column,
+        columns.time_remaining_column,
+        columns.download_column,
         console=console,
         disable=True,
     )
     return progress
 
 
-def render_table(task_dict: dict[str, TaskInfo], progress:Progress) -> Table:
+def render_table(task_dict: dict[str, TaskInfo], progress: Progress, columns: RenderingColumns) -> Table:
     table = Table(title="UPLOADS")
     table.add_column("Video", justify="center")
     table.add_column("Progress Bar", justify="center")
@@ -52,11 +35,11 @@ def render_table(task_dict: dict[str, TaskInfo], progress:Progress) -> Table:
         task = progress.tasks[task_info.task_id]
         table.add_row(
             task_name,
-            bar_column.render(task),
-            file_size_column.render(task),
-            total_file_size_column.render(task),
-            time_elapsed_column.render(task),
-            time_remaining_column.render(task),
-            download_column.render(task),
+            columns.bar_column.render(task),
+            columns.file_size_column.render(task),
+            columns.total_file_size_column.render(task),
+            columns.time_elapsed_column.render(task),
+            columns.time_remaining_column.render(task),
+            columns.download_column.render(task),
         )
     return table
