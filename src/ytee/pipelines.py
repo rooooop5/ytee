@@ -1,17 +1,17 @@
+from ytee.models import YoutubeUploadConfig, UploadLog, DisplayManager, TasksRegistry
 from ytee.paths import get_uploads_dir
 from ytee.auth import get_credentials, init_secrets, set_credentials, verify_credentials, migrate_secrets
 from ytee.upload import build_upload_queue, upload_to_youtube
-from ytee.rendering import get_progress, build_tasks_dict
+from ytee.rendering import get_progress, render_table
 
 import json
 import time
 from pprint import pprint
 from rich.live import Live
-from pathlib import Path
 
 
-def save(video: dict, file_path: str, video_id: str):
-    file_path_obj = Path(file_path)
+def save(log: UploadLog):
+    file_path = log.file_path
     uploads_dir = get_uploads_dir()
     uploads_dir.mkdir(exist_ok=True)
     uploads_file_path = get_uploads_dir().joinpath("uploaded.json")
@@ -21,12 +21,8 @@ def save(video: dict, file_path: str, video_id: str):
     except (FileNotFoundError, json.JSONDecodeError):
         uploaded_list = []
     with open(uploads_file_path, "w+") as f:
-        if file_path_obj.is_dir():
-            obj = {"path": str(Path(file_path).joinpath(video["name"])), "id": video_id}
-            uploaded_list.append(obj)
-        else:
-            obj = {"path": file_path, "id": video_id}
-            uploaded_list.append(obj)
+        obj = {"path": file_path, "youtube_video_name": log.name, "id": log.id}
+        uploaded_list.append(obj)
         json.dump(uploaded_list, f, indent=2)
 
 
@@ -58,27 +54,33 @@ def upload_pipeline(file_path: str, yt_video_name: str, yt_description: str, pri
     if not creds:
         print("Credentials have not been set. Aborting upload.")
         return
+
     queue = build_upload_queue(file_path, yt_video_name)
     with get_progress() as progress:
-        tasks_dict = build_tasks_dict(queue, progress)
+        tasks_registry = TasksRegistry(queue=queue, progress=progress)
         with Live() as live:
+            display_manager = DisplayManager(live=live, renderer=render_table, registry=tasks_registry)
             for video in queue:
-                video_task = tasks_dict.get(video["path"])
-                video_id = upload_to_youtube(
-                    creds,
-                    video["path"],
-                    video["name"],
-                    yt_description,
-                    privacy_setting,
-                    tasks_dict,
-                    video_task,
-                    progress,
-                    live,
+                task = tasks_registry.get(video.path)
+                tasks_registry.start_task(task)
+                config = YoutubeUploadConfig(
+                    name=video.name, description=yt_description, privacy_setting=privacy_setting
                 )
-                if not video_id:
+                response_id = upload_to_youtube(
+                    creds=creds,
+                    video=video,
+                    config=config,
+                    display=display_manager,
+                    registry=tasks_registry,
+                    task=task,
+                )
+                if not response_id:
                     print("Failed to upload to Youtube.")
                     continue
-                save(video, file_path, video_id)
+                tasks_registry.finish_task(task_info=task)
+                display_manager.refresh()
+                upload_log = UploadLog(file_path=video.path, name=config.name, id=response_id)
+                save(upload_log)
                 time.sleep(2)
 
 

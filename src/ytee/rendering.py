@@ -1,3 +1,5 @@
+from ytee.models import TaskInfo
+
 from rich.progress import (
     Progress,
     BarColumn,
@@ -8,7 +10,6 @@ from rich.progress import (
     FileSizeColumn,
     DownloadColumn,
 )
-import os
 from rich.table import Table
 from rich.console import Console
 
@@ -38,16 +39,8 @@ def get_progress() -> Progress:
     return progress
 
 
-def build_tasks_dict(queue, progress) -> dict:
-    tasks_dict = {}
-    for ele in queue:
-        task_id = progress.add_task(ele, start=False, total=os.path.getsize(ele["path"]))
-        tasks_dict[ele["path"]] = task_id
-    return tasks_dict
-
-
-def render_table(task_dict, progress) -> Table:
-    table = Table(title="Task")
+def render_table(task_dict: dict[str, TaskInfo], progress:Progress) -> Table:
+    table = Table(title="UPLOADS")
     table.add_column("Video", justify="center")
     table.add_column("Progress Bar", justify="center")
     table.add_column("Size Uploaded", justify="center")
@@ -55,8 +48,8 @@ def render_table(task_dict, progress) -> Table:
     table.add_column("Time Elapsed", justify="center")
     table.add_column("Time Remaining", justify="center")
     table.add_column("Uploaded", justify="center")
-    for task_name, task_id in task_dict.items():
-        task = progress.tasks[task_id]
+    for task_name, task_info in task_dict.items():
+        task = progress.tasks[task_info.task_id]
         table.add_row(
             task_name,
             bar_column.render(task),

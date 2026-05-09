@@ -6,6 +6,7 @@ from ytee.pipelines import (
     verify_creds_pipeline,
     migrate_pipeline,
 )
+from ytee.models import PrivacySetting
 
 import typer
 from typing import Annotated
@@ -55,6 +56,7 @@ def verify_creds():
 
 
 @app.command(
+    no_args_is_help=True,
     help="Upload a video or a directory of videos to YouTube. Pass a file path to upload a single video, or a directory path to upload everything inside it.",
 )
 def upload(
@@ -71,7 +73,9 @@ def upload(
     yt_description: Annotated[
         str, typer.Option("--desc", "-d", help="YouTube video description applied to all uploaded videos.")
     ],
-    privacy: Annotated[str, typer.Option("--privacy", help="Privacy setting of the video on Youtube")] = "unlisted",
+    privacy: Annotated[
+        PrivacySetting, typer.Option("--privacy", help="Privacy setting of the video on Youtube")
+    ] = PrivacySetting.UNLISTED,
 ):
     upload_pipeline(file_path, yt_video_name, yt_description, privacy)
 
