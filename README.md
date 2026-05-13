@@ -10,12 +10,12 @@ A minimal CLI for uploading videos to YouTube — single files or entire directo
 
 <div align="center">
 
-## ⛔ PLEASE USE LATETS VERSION v0.1.4 ⛔
+## ⛔ PLEASE USE LATEST VERSION v0.1.5 ⛔
 
-**Previous versions less than v0.1.4 should not be used.**
-There is a known bug in the upload history logging that corrupts `uploaded.json` after the first upload.
+**Versions below v0.1.5 should not be used.**
+Earlier versions have known bugs in upload history logging and missing error handling.
 
-**Please upgrade to v0.1.4:**
+**Please upgrade:**
 ```bash
 pip install --upgrade ytee
 ```
@@ -98,7 +98,7 @@ Opens a browser window for Google OAuth authorization and saves the access token
 ytee set-creds
 ```
 
-Run this after `init`. If your credentials are still valid, they are reused automatically — you don't need to re-run this every time.
+Run this after `init`. If your credentials are still valid they are reused automatically — you don't need to re-run this every time. If your token has expired, `ytee` will automatically open the browser to re-authenticate.
 
 ---
 
@@ -135,6 +135,8 @@ When a directory path is given, `ytee` automatically detects it and uploads ever
 | `--desc` | `-d` | YouTube video description applied to all uploaded videos |
 | `--privacy` | — | Privacy setting: `unlisted` (default), `public`, or `private` |
 
+Supported formats: `.mp4`, `.mov`, `.avi`, `.wmv`, `.mkv`, `.webm`, `.m4v`, `.mpeg`, `.mpg`, `.flv`
+
 After each successful upload, `ytee` saves a log entry to `~/.ytee/.uploads/uploaded.json`.
 
 Uploads show a live progress table displaying upload speed, file size, time elapsed, and time remaining.
@@ -147,7 +149,7 @@ Uploads show a live progress table displaying upload speed, file size, time elap
 ytee show-uploads
 ```
 
-Prints the contents of `~/.ytee/.uploads/uploaded.json`, showing the file path and YouTube video ID of every past upload.
+Prints the contents of `~/.ytee/.uploads/uploaded.json`, showing the file path, video title, and YouTube video ID of every past upload.
 
 ---
 
@@ -175,14 +177,24 @@ ytee show-uploads
 
 ---
 
+## Error handling & retries
+
+`ytee` handles common upload failures gracefully:
+
+- **Token expired** — detected before and during upload, prompts you to run `ytee set-creds`
+- **Quota exceeded** — YouTube's daily 10,000 unit limit (each upload costs ~1,600 units). `ytee` reports this clearly when hit. Quota resets at midnight Pacific Time.
+- **Network errors** — timeouts, SSL errors, and connection drops are retried automatically with exponential backoff, up to 10 retries
+- **Server errors** — YouTube 5xx errors are retried up to 5 times
+- **Unsupported file types** — filtered out before upload with a clear message
+
+---
+
 ## Notes
 
 - Videos are uploaded as **unlisted** by default. Use `--privacy public` or `--privacy private` to change this.
 - Credentials are stored in `~/.ytee/.google_secrets/` (`client_secret.json` and `token.json`).
 - Upload history is stored in `~/.ytee/.uploads/uploaded.json`.
 - Directory uploads process files sequentially with a short delay between each upload.
-- Batch uploads include all files in the directory regardless of file extension — make sure your folder contains only video files.
-- On HTTP 5xx errors, `ytee` will retry the upload up to 3 times with a 5-second delay.
 
 ---
 
@@ -194,4 +206,3 @@ ytee show-uploads
 | `google-auth-oauthlib` | OAuth 2.0 authentication flow |
 | `rich` | Live progress table and terminal output |
 | `typer` | CLI framework |
-| `pathlib` | Path handling |
