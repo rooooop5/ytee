@@ -30,7 +30,7 @@ def init_secrets(client_secret_path: str = None, token_path: str = None):
     print("Initialised ytee.")
 
 
-def browser_creds_flow(client_secret_path:Path)->Credentials|None:
+def browser_creds_flow(client_secret_path:Path)->Credentials:
     if not client_secret_path.exists():
         print("Client secret file does not exist.")
         return None
@@ -49,7 +49,7 @@ def set_credentials() -> bool:
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
-            except:
+            except RefreshError:
                 creds = browser_creds_flow(client_secret_path)
                 if not creds:
                     return False
