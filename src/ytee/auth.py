@@ -3,6 +3,7 @@ from ytee.paths import get_ytee_dir, get_secrets_dir, get_deprecated_secrets_dir
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.auth.exceptions import RefreshError
 from pathlib import Path
 
 
@@ -29,6 +30,15 @@ def init_secrets(client_secret_path: str = None, token_path: str = None):
     print("Initialised ytee.")
 
 
+def browser_creds_flow(client_secret_path:Path)->Credentials|None:
+    if not client_secret_path.exists():
+        print("Client secret file does not exist.")
+        return None
+    flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file=client_secret_path, scopes=SCOPES)
+    creds = flow.run_local_server(port=0)
+    return creds
+
+
 def set_credentials() -> bool:
     creds = None
     token_path = get_secrets_dir().joinpath("token.json")
@@ -37,13 +47,16 @@ def set_credentials() -> bool:
         creds = Credentials.from_authorized_user_file(token_path, scopes=SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except:
+                creds = browser_creds_flow(client_secret_path)
+                if not creds:
+                    return False
         else:
-            if not client_secret_path.exists():
-                print("Client secret file does not exist.")
+            creds = browser_creds_flow(client_secret_path)
+            if not creds:
                 return False
-            flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file=client_secret_path, scopes=SCOPES)
-            creds = flow.run_local_server(port=0)
         with open(token_path, "w") as token:
             token.write(creds.to_json())
     return True
@@ -63,7 +76,11 @@ def get_credentials() -> Credentials:
     secrets_path = get_secrets_dir()
     token_path = secrets_path.joinpath("token.json")
     if token_path.exists():
-        return Credentials.from_authorized_user_file(token_path, scopes=SCOPES)
+        try:
+            return Credentials.from_authorized_user_file(token_path, scopes=SCOPES)
+        except RefreshError:
+            print("Your tokens have expired. Please refresh them using set-creds.")
+            return None
     else:
         return None
 

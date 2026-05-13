@@ -11,4 +11,5 @@ wheels/
 /videos
 /secrets
 *.txt
+.DS_Store
 main.py

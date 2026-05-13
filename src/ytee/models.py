@@ -11,8 +11,31 @@ from rich.progress import (
     FileSizeColumn,
     DownloadColumn,
 )
+import time
 from pathlib import Path
+from typing import Literal
 from dataclasses import dataclass, field
+
+
+@dataclass
+class UploadRetryConfig:
+    network_retries: int = 10
+    http_retries: int = 5
+    wait_seconds: int = 2
+
+    def wait(self, exception_type: Literal["HTTP", "NETWORK"]):
+        if exception_type == "HTTP":
+            self.http_retries -= 1
+        elif exception_type == "NETWORK":
+            self.network_retries -= 1
+        time.sleep(self.wait_seconds)
+        self.wait = min(self.wait**2, 30)
+
+
+class ControlSignal(str, Enum):
+    BREAK = "BREAK"
+    CONTINUE = "CONTINUE"
+    NORMAL = "NORMAL"
 
 
 class PrivacySetting(str, Enum):

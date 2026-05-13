@@ -35,8 +35,8 @@ def init_pipeline(client_secret_path: str, token_path_str):
 
 
 def set_creds_pipeline():
-    set = set_credentials()
-    if set:
+    done = set_credentials()
+    if done:
         print("Credentials have been set.")
     else:
         print("Failed to set credentials.")
@@ -46,7 +46,7 @@ def verify_creds_pipeline():
     if verify_credentials():
         print("Credentials are already set.")
     else:
-        print("Crendentials have not been set.")
+        print("Crendetials have not been set.")
 
 
 def upload_pipeline(file_path: str, yt_video_name: str, yt_description: str, privacy_setting: str):
@@ -91,5 +91,8 @@ def show_uploads_pipeline():
         print("No uploads have been done yet.")
         return
     with open(uploaded_file_path, "r") as f:
-        uploaded_list = json.load(f)
-        pprint(uploaded_list)
+        try:
+            uploaded_list = json.load(f)
+            print(json.dumps(uploaded_list,indent=2))
+        except json.JSONDecodeError:
+            print("Unable to show uploads. Delete uploads.json as it is corrupted.")
